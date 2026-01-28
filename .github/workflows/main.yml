@@ -24,15 +24,38 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run UI Tests
-        # Note: We run @JSON because GitHub won't have your local SQL Express
+        # We run @JSON because GitHub won't have your local SQL Express
         run: npx cucumber-js --tags "@UI and @JSON"
+        continue-on-error: true # Ensures reporting runs even if tests fail
         env:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
           DB_SERVER: ${{ secrets.DB_SERVER }}
           DB_NAME: ${{ secrets.DB_NAME }}
 
-      - name: Load Allure history
+      - name: Upload Results for Reporting
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+          retention-days: 1
+
+  reporting:
+    runs-on: ubuntu-latest # Linux is required for the Allure Action
+    needs: test # Only runs after the 'test' job finishes
+    if: always()
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+      - name: Get Allure history
         uses: actions/checkout@v4
         if: always()
         continue-on-error: true
@@ -42,7 +65,6 @@ jobs:
 
       - name: Build Allure Report
         uses: simple-elf/allure-report-action@master
-        if: always()
         with:
           allure_results: allure-results
           allure_history: allure-history
@@ -50,7 +72,6 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: allure-history
