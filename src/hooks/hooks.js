@@ -1,6 +1,7 @@
 const { Before, After, BeforeAll, AfterAll, setDefaultTimeout } = require('@cucumber/cucumber');
 const { chromium, request } = require('@playwright/test'); // Added 'request' here
 const fs = require('fs');
+const RPClient = require('@reportportal/agent-js-cucumber').RPClient;
 
 // Global timeout for the entire step
 setDefaultTimeout(60000); 
@@ -55,6 +56,9 @@ After(async function (scenario) {
         // Video
         const videoPath = await this.page.video().path();
         this.attach(fs.readFileSync(videoPath), 'video/webm');
+
+        // Optional: Send a manual log message to RP
+        console.log("Reporting failure to Report Portal dashboard...");
     }
 
     // Cleanup Page

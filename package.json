@@ -17,7 +17,9 @@
   "devDependencies": {
     "@cucumber/cucumber": "^12.6.0",
     "@playwright/test": "^1.50.0",
-    "allure-cucumberjs": "^3.4.5"
+    "@reportportal/agent-js-cucumber": "^5.6.1",
+    "allure-cucumberjs": "^3.4.5",
+    "allure-playwright": "^3.4.5"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
