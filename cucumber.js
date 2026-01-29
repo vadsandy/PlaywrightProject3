@@ -9,11 +9,10 @@ module.exports = {
     ],
     format: [
       'progress-bar',
-      'allure-cucumberjs/reporter',
-      '@reportportal/agent-js-cucumber'
+      ['allure-cucumberjs/reporter', { resultsDir: 'allure-results' }]
     ],
     formatOptions: {
-      resultsDir: 'allure-results'
+      snippetInterface: 'async-await'
     },
     publishQuiet: true
   }

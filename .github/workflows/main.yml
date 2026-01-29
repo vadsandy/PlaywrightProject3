@@ -50,10 +50,14 @@ jobs:
       - name: Run UI Tests
         shell: pwsh
         run: |
-          # Set variables with fallbacks for automatic 'push' events
+          # 1. Force create the folder to avoid upload errors
+          if (!(Test-Path "allure-results")) { New-Item -ItemType Directory -Path "allure-results" }
+          
+          # 2. Handle Tags
           $tag = "${{ github.event.inputs.test_tag }}"
           if ([string]::IsNullOrWhiteSpace($tag)) { $tag = "@UI" }
           
+          # 3. Handle Feature File
           $feature = "${{ github.event.inputs.feature_file }}"
 
           if ($feature -ne "") {
@@ -91,7 +95,6 @@ jobs:
           name: allure-results
           path: allure-results
       
-      # This creates the directory if it's missing to prevent the report build from crashing
       - name: Ensure results directory exists
         run: mkdir -p allure-results
 
@@ -106,9 +109,7 @@ jobs:
       - name: Generate Environment Info
         shell: pwsh
         run: |
-          # Ensure directory exists before writing to it
           if (!(Test-Path "allure-results")) { New-Item -ItemType Directory -Path "allure-results" }
-          
           $envPath = "allure-results/environment.properties"
           "Environment=${{ github.event.inputs.environment || 'QA' }}" | Out-File -FilePath $envPath -Encoding utf8
           "Browser=Chromium" | Out-File -FilePath $envPath -Append -Encoding utf8
@@ -122,7 +123,6 @@ jobs:
           allure_results: allure-results
           allure_history: allure-history
           keep_reports: 20
-          # Custom metadata for the Dashboard's "Environment" widget
           report_url: https://vadsandy.github.io/PlaywrightProject3/
           test_env: ${{ github.event.inputs.environment || 'QA' }}
 
