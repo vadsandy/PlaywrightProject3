@@ -2,10 +2,28 @@ name: Playwright Regression Suite
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select Target Environment'
+        required: true
+        default: 'QA'
+        type: choice
+        options:
+          - 'QA'
+          - 'Staging'
+          - 'Production'
+      test_tag:
+        description: 'Filter by Tag (e.g., @UI, @JSON, @SQL)'
+        required: true
+        default: '@UI'
+        type: string
+      feature_file:
+        description: 'Path to specific Feature File (Leave empty for all)'
+        required: false
+        default: ''
+        type: string
 
-# Added explicit permissions for GitHub Pages and Contents
 permissions:
   contents: write
   pages: write
@@ -30,9 +48,16 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run UI Tests
-        run: npx cucumber-js --tags "@UI and @JSON"
+        # Logic: If feature_file is provided, run that file. Otherwise, run by tags.
+        run: |
+          if ("${{ github.event.inputs.feature_file }}" -ne "") {
+            npx cucumber-js "${{ github.event.inputs.feature_file }}" --tags "${{ github.event.inputs.test_tag }}"
+          } else {
+            npx cucumber-js --tags "${{ github.event.inputs.test_tag }}"
+          }
         continue-on-error: true 
         env:
+          TARGET_ENV: ${{ github.event.inputs.environment }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
 
@@ -51,33 +76,34 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
       - name: Download Results
         uses: actions/download-artifact@v4
         with:
           name: allure-results
           path: allure-results
-
       - name: Get Allure history
         uses: actions/checkout@v4
         if: always()
-        continue-on-error: true # This is key! If gh-pages doesn't exist, don't crash.
+        continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
-
       - name: Build Allure Report
         uses: simple-elf/allure-report-action@master
-        if: always()
         with:
           allure_results: allure-results
           allure_history: allure-history
           keep_reports: 20
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: allure-history
-          publish_branch: gh-pages # Ensures it targets the right branch
+
+      - name: Post Summary Link
+        if: always()
+        run: |
+          echo "### Test Run Summary 📊" >> $GITHUB_STEP_SUMMARY
+          echo "* **Environment:** ${{ github.event.inputs.environment || 'Default' }}" >> $GITHUB_STEP_SUMMARY
+          echo "* **Tags Run:** ${{ github.event.inputs.test_tag || '@UI' }}" >> $GITHUB_STEP_SUMMARY
+          echo "* **Report:** [View Allure Report](https://vadsandy.github.io/PlaywrightProject3/)" >> $GITHUB_STEP_SUMMARY
