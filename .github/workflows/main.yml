@@ -5,6 +5,12 @@ on:
   pull_request:
     branches: [ main, master ]
 
+# Added explicit permissions for GitHub Pages and Contents
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   test:
     runs-on: windows-latest
@@ -24,16 +30,13 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run UI Tests
-        # We run @JSON because GitHub won't have your local SQL Express
         run: npx cucumber-js --tags "@UI and @JSON"
-        continue-on-error: true # Ensures reporting runs even if tests fail
+        continue-on-error: true 
         env:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
-          DB_SERVER: ${{ secrets.DB_SERVER }}
-          DB_NAME: ${{ secrets.DB_NAME }}
 
-      - name: Upload Results for Reporting
+      - name: Upload Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -42,8 +45,8 @@ jobs:
           retention-days: 1
 
   reporting:
-    runs-on: ubuntu-latest # Linux is required for the Allure Action
-    needs: test # Only runs after the 'test' job finishes
+    runs-on: ubuntu-latest
+    needs: test
     if: always()
     steps:
       - name: Checkout Code
@@ -58,13 +61,14 @@ jobs:
       - name: Get Allure history
         uses: actions/checkout@v4
         if: always()
-        continue-on-error: true
+        continue-on-error: true # This is key! If gh-pages doesn't exist, don't crash.
         with:
           ref: gh-pages
           path: gh-pages
 
       - name: Build Allure Report
         uses: simple-elf/allure-report-action@master
+        if: always()
         with:
           allure_results: allure-results
           allure_history: allure-history
@@ -72,6 +76,8 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
+        if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: allure-history
+          publish_branch: gh-pages # Ensures it targets the right branch
