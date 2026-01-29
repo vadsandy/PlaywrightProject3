@@ -103,6 +103,18 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
+      - name: Generate Environment Info
+        shell: pwsh
+        run: |
+          # Ensure directory exists before writing to it
+          if (!(Test-Path "allure-results")) { New-Item -ItemType Directory -Path "allure-results" }
+          
+          $envPath = "allure-results/environment.properties"
+          "Environment=${{ github.event.inputs.environment || 'QA' }}" | Out-File -FilePath $envPath -Encoding utf8
+          "Browser=Chromium" | Out-File -FilePath $envPath -Append -Encoding utf8
+          "Runner=GitHub Actions" | Out-File -FilePath $envPath -Append -Encoding utf8
+          "Node_Version=20" | Out-File -FilePath $envPath -Append -Encoding utf8
+
       - name: Build Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()

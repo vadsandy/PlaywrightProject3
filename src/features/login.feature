@@ -1,6 +1,7 @@
 Feature: Login Functionality
+@allure.id=1
 
-  @UI @JSON
+  @UI @JSON @severity=critical
   Scenario: Login via JSON
     Given I navigate to the DemoQA login page
     When I login using "json" data from "data/json/users.json" and key "validUser"

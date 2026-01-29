@@ -1,7 +1,7 @@
 const { Before, After, BeforeAll, AfterAll, setDefaultTimeout } = require('@cucumber/cucumber');
 const { chromium, request } = require('@playwright/test'); // Added 'request' here
 const fs = require('fs');
-const RPClient = require('@reportportal/agent-js-cucumber').RPClient;
+
 
 // Global timeout for the entire step
 setDefaultTimeout(60000); 
@@ -57,8 +57,16 @@ After(async function (scenario) {
         const videoPath = await this.page.video().path();
         this.attach(fs.readFileSync(videoPath), 'video/webm');
 
-        // Optional: Send a manual log message to RP
-        console.log("Reporting failure to Report Portal dashboard...");
+        // 2. Add "Create Issue" Link to Allure
+        // Replace 'your-username' and 'your-repo' with your actual GitHub details
+        const repoUrl = "https://github.com/vadsandy/PlaywrightProject3/issues/new";
+        const title = encodeURIComponent(`Bug: ${scenario.pickle.name} failed`);
+        const body = encodeURIComponent(`The test '${scenario.pickle.name}' failed in the ${process.env.TARGET_ENV || 'QA'} environment.`);
+        
+        const issueUrl = `${repoUrl}?title=${title}&body=${body}`;
+        
+        // This attaches a clickable link in the Allure report
+        this.attach(`[Click here to report this bug on GitHub](${issueUrl})`, 'text/markdown');
     }
 
     // Cleanup Page
