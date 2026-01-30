@@ -2,10 +2,17 @@ pipeline {
     agent any
     
     // 1. Environment variables help Playwright/SQL find your credentials
-    environment {
-        // This maps your Jenkins vault secrets to environment variables
+   environment {
+        // Secrets from Jenkins Credentials Provider
         DB_USER = credentials('DB_USER_ID') 
         DB_PASS = credentials('DB_PASSWORD_SECRET')
+        
+        // These are the missing pieces usually found in your .env file
+        // Update these values to match your actual database details
+        DB_HOST = 'localhost' // or your server IP
+        DB_NAME = 'PlaywrightTestData'
+        DB_PORT = '1433' 
+        
         TARGET_ENV = "${params.ENVIRONMENT}"
     }
     
