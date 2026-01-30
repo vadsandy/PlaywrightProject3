@@ -7,6 +7,12 @@ Feature: Login Functionality
     When I login using "json" data from "data/json/users.json" and key "validUser"
     Then I should verify if the login was successful
 
+  @UI @EXCEL @severity=critical
+  Scenario: Login via EXCEL
+    Given I navigate to the DemoQA login page
+    When I login using "excel" data from "data/excel/users.xlsx" and key "validUser"
+    Then I should verify if the login was successful
+
   @UI @SQL
   Scenario: Login via SQL Database
     Given I navigate to the DemoQA login page

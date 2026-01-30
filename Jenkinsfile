@@ -1,34 +1,37 @@
 pipeline {
     agent any
     
-    // 1. Environment variables help Playwright/SQL find your credentials
-   environment {
-        // Secrets from Jenkins Credentials Provider
+    environment {
+        // Database credentials from Jenkins Vault
         DB_USER = credentials('DB_USER_ID') 
         DB_PASS = credentials('DB_PASSWORD_SECRET')
         
-        // These are the missing pieces usually found in your .env file
-        // Update these values to match your actual database details
-        DB_SERVER = 'localhost' // or your server IP
+        // Exact DB details provided by you
+        DB_SERVER = 'localhost'
         DB_NAME = 'PlaywrightTestData'
-        DB_PORT = '1433' 
+        DB_PORT = '1433'
+        BASE_URL = 'https://demoqa.com'
         
         TARGET_ENV = "${params.ENVIRONMENT}"
     }
     
     parameters {
-        choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'], description: 'Pick Env')
-    
-        // This turns the text box into a dropdown for common tags
-        choice(name: 'TEST_TAG', choices: ['@UI', '@Regression', '@Smoke', '@Excel', '@API'], description: 'Select the tag to run')
+        // Dropdown for Environment
+        choice(name: 'ENVIRONMENT', 
+               choices: ['QA', 'Staging', 'Production'], 
+               description: 'Select the target environment')
         
-        // SELECTED_FEATURES remains handled by your Active Choices UI configuration
+        // Dropdown for Tags
+        choice(name: 'TEST_TAG', 
+               choices: ['@UI', '@EXCEL', '@JSON', '@SQL', '@API', '@Regression'], 
+               description: 'Select the test category to execute')
+        
+        // SELECTED_FEATURES is handled by Active Choices in the Jenkins UI
     }
 
     stages {
         stage('Cleanup') {
             steps {
-                // 2. Wipe old results so the report only shows the current run
                 bat 'if exist allure-results del /q allure-results\\*'
             }
         }
@@ -50,16 +53,15 @@ pipeline {
             steps {
                 script {
                     def runTarget = ""
-                    // Handle feature selection from checkboxes
                     if (params.SELECTED_FEATURES && params.SELECTED_FEATURES.trim() != "") {
                         runTarget = params.SELECTED_FEATURES.split(',').collect { "src/features/${it.trim()}" }.join(' ')
                     } else {
                         runTarget = "src/features/"
                     }
                     
-                    echo "Running tests for: ${runTarget} on ${env.TARGET_ENV}"
+                    echo "Running tests for: ${runTarget} with tag ${params.TEST_TAG} on ${env.TARGET_ENV}"
                     
-                    // 3. The 'bat' command will now use the DB_USER/DB_PASS from the environment block above
+                    // The 'bat' command inherits the environment variables defined above
                     bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG}"
                 }
             }
@@ -68,7 +70,6 @@ pipeline {
 
     post {
         always {
-            // 4. Generate the Allure report from the results directory
             allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
         }
     }
