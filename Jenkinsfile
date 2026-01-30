@@ -23,9 +23,17 @@ pipeline {
         stage('Execute Tests') {
             steps {
                 script {
-                    // This converts your checkbox selections into a command
-                    def featureList = params.SELECTED_FEATURES.replace(',', ' ')
-                    bat "npx cucumber-js src/features/${featureList} --tags @UI"
+                    // Check if any features were selected; if not, run all in the folder
+                    def runTarget = ""
+                    if (params.SELECTED_FEATURES && params.SELECTED_FEATURES.trim() != "") {
+                        // Converts "login.feature,api.feature" to "src/features/login.feature src/features/api.feature"
+                        runTarget = params.SELECTED_FEATURES.split(',').collect { "src/features/${it.trim()}" }.join(' ')
+                    } else {
+                        runTarget = "src/features/"
+                    }
+                    
+                    echo "Running: ${runTarget}"
+                    bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG ?: '@UI'}"
                 }
             }
         }
