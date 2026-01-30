@@ -1,0 +1,1 @@
+[{"uid":"626ff36708555d1b","name":"Login via JSON","time":{"start":1769773845155,"stop":1769773852614,"duration":7459},"status":"passed","severity":"normal"},{"uid":"edcf1c4ce75d2253","name":"Login via SQL Database","time":{"start":1769773852616,"stop":1769773870878,"duration":18262},"status":"broken","severity":"normal"}]
