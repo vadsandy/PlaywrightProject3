@@ -2,13 +2,16 @@ pipeline {
     agent any
     
     environment {
-        // Hardcoding values to bypass the Jenkins Credentials provider for debugging
-        DB_USER = 'sa'
-        DB_PASS = 'AutomationTesting'
-        DB_SERVER = 'localhost'
+        // Switch back to secure credentials now that we know the server path is right
+        DB_USER = credentials('DB_USER_ID') 
+        DB_PASS = credentials('DB_PASSWORD_SECRET')
+        
+        // These are static for your local machine
+        DB_SERVER = 'localhost' // Use 'localhost' or '127.0.0.1'
         DB_NAME = 'PlaywrightTestData'
         DB_PORT = '1433'
         BASE_URL = 'https://demoqa.com'
+        
         TARGET_ENV = "${params.ENVIRONMENT}"
     }
     
@@ -34,14 +37,11 @@ pipeline {
         stage('Execute Tests') {
             steps {
                 script {
-                    // Logic to handle feature selection
                     def runTarget = (params.SELECTED_FEATURES && params.SELECTED_FEATURES.trim() != "") ? 
                                     params.SELECTED_FEATURES.split(',').collect { "src/features/${it.trim()}" }.join(' ') : 
                                     "src/features/"
                     
-                    echo "Executing with Hardcoded Credentials on ${env.DB_SERVER}"
-                    
-                    // The 'bat' command will use the environment variables defined at the top
+                    echo "Running tests with credentials on ${env.DB_SERVER}"
                     bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG}"
                 }
             }
