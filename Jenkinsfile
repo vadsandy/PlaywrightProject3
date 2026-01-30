@@ -9,7 +9,7 @@ pipeline {
         
         // These are the missing pieces usually found in your .env file
         // Update these values to match your actual database details
-        DB_HOST = 'localhost' // or your server IP
+        DB_SERVER = 'localhost' // or your server IP
         DB_NAME = 'PlaywrightTestData'
         DB_PORT = '1433' 
         
@@ -17,9 +17,12 @@ pipeline {
     }
     
     parameters {
-        choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'], description: 'Pick Target Environment')
-        string(name: 'TEST_TAG', defaultValue: '@UI', description: 'Filter tests by tag')
-        // Note: SELECTED_FEATURES is managed by the Active Choices Plugin in the Jenkins UI
+        choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'], description: 'Pick Env')
+    
+        // This turns the text box into a dropdown for common tags
+        choice(name: 'TEST_TAG', choices: ['@UI', '@Regression', '@Smoke', '@Excel', '@API'], description: 'Select the tag to run')
+        
+        // SELECTED_FEATURES remains handled by your Active Choices UI configuration
     }
 
     stages {
