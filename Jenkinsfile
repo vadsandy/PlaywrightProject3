@@ -2,43 +2,25 @@ pipeline {
     agent any
     
     environment {
-        // Database credentials from Jenkins Vault
-        DB_USER = credentials('DB_USER_ID') 
-        DB_PASS = credentials('DB_PASSWORD_SECRET')
-        
-        // Exact DB details provided by you
+        // Hardcoding values to bypass the Jenkins Credentials provider for debugging
+        DB_USER = 'sa'
+        DB_PASS = 'AutomationTesting'
         DB_SERVER = 'localhost'
         DB_NAME = 'PlaywrightTestData'
         DB_PORT = '1433'
         BASE_URL = 'https://demoqa.com'
-        
         TARGET_ENV = "${params.ENVIRONMENT}"
     }
     
     parameters {
-        // Dropdown for Environment
-        choice(name: 'ENVIRONMENT', 
-               choices: ['QA', 'Staging', 'Production'], 
-               description: 'Select the target environment')
-        
-        // Dropdown for Tags
-        choice(name: 'TEST_TAG', 
-               choices: ['@UI', '@EXCEL', '@JSON', '@SQL', '@API', '@Regression'], 
-               description: 'Select the test category to execute')
-        
-        // SELECTED_FEATURES is handled by Active Choices in the Jenkins UI
+        choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'], description: 'Environment')
+        choice(name: 'TEST_TAG', choices: ['@UI', '@EXCEL', '@JSON', '@SQL'], description: 'Test Tag')
     }
 
     stages {
         stage('Cleanup') {
             steps {
                 bat 'if exist allure-results del /q allure-results\\*'
-            }
-        }
-
-        stage('Checkout') {
-            steps {
-                checkout scm
             }
         }
 
@@ -52,16 +34,14 @@ pipeline {
         stage('Execute Tests') {
             steps {
                 script {
-                    def runTarget = ""
-                    if (params.SELECTED_FEATURES && params.SELECTED_FEATURES.trim() != "") {
-                        runTarget = params.SELECTED_FEATURES.split(',').collect { "src/features/${it.trim()}" }.join(' ')
-                    } else {
-                        runTarget = "src/features/"
-                    }
+                    // Logic to handle feature selection
+                    def runTarget = (params.SELECTED_FEATURES && params.SELECTED_FEATURES.trim() != "") ? 
+                                    params.SELECTED_FEATURES.split(',').collect { "src/features/${it.trim()}" }.join(' ') : 
+                                    "src/features/"
                     
-                    echo "Running tests for: ${runTarget} with tag ${params.TEST_TAG} on ${env.TARGET_ENV}"
+                    echo "Executing with Hardcoded Credentials on ${env.DB_SERVER}"
                     
-                    // The 'bat' command inherits the environment variables defined above
+                    // The 'bat' command will use the environment variables defined at the top
                     bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG}"
                 }
             }
