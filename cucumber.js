@@ -16,4 +16,4 @@ module.exports = {
     },
     publishQuiet: true
   }
-};
+}
