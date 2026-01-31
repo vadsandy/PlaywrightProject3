@@ -37,10 +37,10 @@ pipeline {
         stage('Execute') {
             steps {
                 script {
-                    def runTarget = (params.SELECTED_FEATURES && params.SELECTED_FEATURES.trim() != "") ? 
-                                    params.SELECTED_FEATURES.split(',').collect { "src/features/${it.trim()}" }.join(' ') : 
-                                    "src/features/"
-                    bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG}"
+                    // Ensure the reports directory exists for the JUnit XML
+                    bat 'if not exist reports mkdir reports' 
+                    
+                    bat "npx cucumber-js src/features/login_negative.feature --tags ${params.TEST_TAG} --format junit:reports/junit.xml"
                 }
             }
         }

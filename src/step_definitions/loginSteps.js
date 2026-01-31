@@ -53,3 +53,8 @@ Then('I should be able to fetch user account details using the token', async fun
     const userDetails = await response.json();
     console.log(`Verified user via API: ${userDetails.username}`);
 });
+
+Then('I should see an error message {string}', async function (expectedMessage) {
+    const actualMessage = await this.loginPage.errorMessage.textContent();
+    expect(actualMessage.trim()).toBe(expectedMessage);
+});
