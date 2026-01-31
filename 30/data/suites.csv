@@ -1,0 +1,7 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","28465","Login via SQL Database","","Sat Jan 31 07:52:46 UTC 2026","broken","Sat Jan 31 07:53:15 UTC 2026","","","",""
+"","5445","Login via EXCEL","","Sat Jan 31 07:52:41 UTC 2026","passed","Sat Jan 31 07:52:46 UTC 2026","","","",""
+"","106","Login failure via JSON","","Sat Jan 31 07:53:15 UTC 2026","broken","Sat Jan 31 07:53:15 UTC 2026","","","",""
+"","9242","Login via JSON","","Sat Jan 31 07:52:32 UTC 2026","passed","Sat Jan 31 07:52:41 UTC 2026","","","",""
+"","63","Loin failure via SQL","","Sat Jan 31 07:53:15 UTC 2026","passed","Sat Jan 31 07:53:15 UTC 2026","","","",""
+"","134","Login failure via Excel","","Sat Jan 31 07:53:15 UTC 2026","broken","Sat Jan 31 07:53:15 UTC 2026","","","",""
