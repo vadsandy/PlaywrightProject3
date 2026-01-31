@@ -1,6 +1,11 @@
 pipeline {
     agent any
     
+    options {
+        timeout(time: 15, unit: 'MINUTES') 
+        ansiColor('xterm')
+    }
+
     environment {
         DB_USER = credentials('DB_USER_ID') 
         DB_PASS = credentials('DB_PASSWORD_SECRET')
@@ -12,35 +17,39 @@ pipeline {
     
     parameters {
         choice(name: 'BRANCH_NAME', choices: ['main', 'dev', 'qa-branch'], description: 'Select branch to run')
-        choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'])
-        choice(name: 'TEST_TAG', choices: ['@UI', '@SQL', '@JSON', '@EXCEL'])
+        choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'], description: 'Target Environment')
+        choice(name: 'TEST_TAG', choices: ['@UI', '@SQL', '@JSON', '@EXCEL', '@Negative'], description: 'Select Tag')
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout([$class: 'GitSCM', 
-                    branches: [[name: "*/${params.BRANCH_NAME}"]], 
-                    userRemoteConfigs: [[url: 'https://github.com/vadsandy/PlaywrightProject3.git', credentialsId: 'PlaywrightProject3']]
-                ])
-            }
-        }
         stage('Cleanup') {
-            steps { bat 'if exist allure-results del /q allure-results\\*' }
-        }
-        stage('Install') {
             steps {
-                bat 'npm install'
-                bat 'npx playwright install --with-deps'
+                // Using double backslashes for Windows paths
+                bat 'if exist allure-results del /q allure-results\\*'
+                bat 'if exist reports del /q reports\\*'
+                bat 'if not exist reports mkdir reports'
             }
         }
-        stage('Execute') {
+
+        stage('Install Dependencies') {
+            steps {
+                // 'npm install' updates packages; we skip 'playwright install' 
+                // because browsers are already installed on your local Jenkins machine.
+                bat 'npm install'
+            }
+        }
+
+        stage('Execute Tests') {
             steps {
                 script {
-                    // Ensure the reports directory exists for the JUnit XML
-                    bat 'if not exist reports mkdir reports' 
+                    // This logic allows running the specific negative feature file 
+                    // or all features if you use different tags.
+                    def runTarget = "src/features/login_negative.feature"
                     
-                    bat "npx cucumber-js src/features/login_negative.feature --tags ${params.TEST_TAG} --format junit:reports/junit.xml"
+                    echo "Running tests on branch: ${params.BRANCH_NAME} with tag: ${params.TEST_TAG}"
+                    
+                    // The --format junit ensures the Test Results Analyzer gets data
+                    bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG} --format junit:reports/junit.xml"
                 }
             }
         }
@@ -48,8 +57,10 @@ pipeline {
 
     post {
         always {
+            // Generate Allure Report
             allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
-            // This is the "magic" line for the Test Results Analyzer
+            
+            // Archive JUnit results for the Test Results Analyzer
             junit testResults: 'reports/junit.xml', allowEmptyResults: true
         }
     }
