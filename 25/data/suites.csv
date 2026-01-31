@@ -1,0 +1,4 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","18022","Login via SQL Database","","Sat Jan 31 05:55:37 UTC 2026","broken","Sat Jan 31 05:55:55 UTC 2026","","","",""
+"","8300","Login via JSON","","Sat Jan 31 05:55:24 UTC 2026","passed","Sat Jan 31 05:55:32 UTC 2026","","","",""
+"","4869","Login via EXCEL","","Sat Jan 31 05:55:32 UTC 2026","passed","Sat Jan 31 05:55:37 UTC 2026","","","",""
