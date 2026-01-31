@@ -14,19 +14,14 @@ pipeline {
         choice(name: 'BRANCH_NAME', choices: ['main', 'dev', 'qa-branch'], description: 'Select branch to run')
         choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'])
         choice(name: 'TEST_TAG', choices: ['@UI', '@SQL', '@JSON', '@EXCEL'])
+        string(name: 'SELECTED_FEATURES', defaultValue: '', description: 'Comma separated feature files (e.g. login.feature, login_negative.feature)')
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout([$class: 'GitSCM', 
-                    branches: [[name: "*/${params.BRANCH_NAME}"]], 
-                    userRemoteConfigs: [[url: 'https://github.com/vadsandy/PlaywrightProject3.git', credentialsId: 'PlaywrightProject3']]
-                ])
-            }
-        }
+        
         stage('Cleanup') {
-            steps { bat 'if exist allure-results del /q allure-results\\*' }
+            bat 'if exist allure-results del /q allure-results\\*' 
+            bat 'if not exist reports mkdir reports' // <--- ADD THIS LINE
         }
         stage('Install') {
             steps {
@@ -40,7 +35,9 @@ pipeline {
                     def runTarget = (params.SELECTED_FEATURES && params.SELECTED_FEATURES.trim() != "") ? 
                                     params.SELECTED_FEATURES.split(',').collect { "src/features/${it.trim()}" }.join(' ') : 
                                     "src/features/"
-                    bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG}"
+                    
+                    // UPDATE THIS LINE BELOW
+                    bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG} --format junit:reports/junit.xml"
                 }
             }
         }
