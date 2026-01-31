@@ -14,13 +14,12 @@ pipeline {
         choice(name: 'BRANCH_NAME', choices: ['main', 'dev', 'qa-branch'], description: 'Select branch to run')
         choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'])
         choice(name: 'TEST_TAG', choices: ['@UI', '@SQL', '@JSON', '@EXCEL'])
-        string(name: 'SELECTED_FEATURES', defaultValue: '', description: 'Comma separated feature files (e.g. login.feature)')
+        string(name: 'SELECTED_FEATURES', defaultValue: '', description: 'Comma separated feature files')
     }
 
     stages {
         stage('Cleanup') {
             steps {
-                // All bat commands must stay inside this steps block
                 bat 'if exist allure-results del /q allure-results\\*'
                 bat 'if not exist reports mkdir reports'
             }
