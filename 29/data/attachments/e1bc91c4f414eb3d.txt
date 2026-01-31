@@ -1,0 +1,1 @@
+[Click here to report this bug on GitHub](https://github.com/vadsandy/PlaywrightProject3/issues/new?title=Bug%3A%20Login%20via%20SQL%20Database%20failed&body=The%20test%20'Login%20via%20SQL%20Database'%20failed%20in%20the%20QA%20environment.)
