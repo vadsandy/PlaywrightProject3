@@ -4,7 +4,7 @@
   "description": "Playwright BDD Framework with SQL and CI/CD Allure History",
   "main": "index.js",
   "scripts": {
-    "test": "cucumber-js",
+    "test": "cucumber-js --format junit:reports/junit.xml --format progress",
     "test:ui": "cucumber-js --tags '@UI'",
     "test:json": "cucumber-js --tags '@JSON'",
     "report:generate": "allure generate allure-results --clean -o allure-report",
