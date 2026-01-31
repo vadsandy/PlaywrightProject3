@@ -3,7 +3,7 @@ pipeline {
     
     options {
         timeout(time: 15, unit: 'MINUTES') 
-        ansiColor('xterm')
+        // Removed ansiColor as the plugin is missing in your Jenkins setup
     }
 
     environment {
@@ -17,38 +17,35 @@ pipeline {
     
     parameters {
         choice(name: 'BRANCH_NAME', choices: ['main', 'dev', 'qa-branch'], description: 'Select branch to run')
-        choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'], description: 'Target Environment')
-        choice(name: 'TEST_TAG', choices: ['@UI', '@SQL', '@JSON', '@EXCEL', '@Negative'], description: 'Select Tag')
+        choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'])
+        choice(name: 'TEST_TAG', choices: ['@UI', '@SQL', '@JSON', '@EXCEL', '@Negative'])
     }
 
     stages {
         stage('Cleanup') {
             steps {
-                // Using double backslashes for Windows paths
                 bat 'if exist allure-results del /q allure-results\\*'
                 bat 'if exist reports del /q reports\\*'
                 bat 'if not exist reports mkdir reports'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install') {
             steps {
-                // 'npm install' updates packages; we skip 'playwright install' 
-                // because browsers are already installed on your local Jenkins machine.
                 bat 'npm install'
+                // Skiping 'playwright install' as it's already on your local machine
             }
         }
 
-        stage('Execute Tests') {
+        stage('Execute') {
             steps {
                 script {
-                    // This logic allows running the specific negative feature file 
-                    // or all features if you use different tags.
+                    // This points to your new negative test feature file
                     def runTarget = "src/features/login_negative.feature"
                     
-                    echo "Running tests on branch: ${params.BRANCH_NAME} with tag: ${params.TEST_TAG}"
+                    echo "Executing ${runTarget} with tag ${params.TEST_TAG}"
                     
-                    // The --format junit ensures the Test Results Analyzer gets data
+                    // Generating junit.xml for the Test Results Analyzer
                     bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG} --format junit:reports/junit.xml"
                 }
             }
@@ -57,10 +54,7 @@ pipeline {
 
     post {
         always {
-            // Generate Allure Report
             allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
-            
-            // Archive JUnit results for the Test Results Analyzer
             junit testResults: 'reports/junit.xml', allowEmptyResults: true
         }
     }
