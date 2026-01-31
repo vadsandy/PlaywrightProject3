@@ -11,7 +11,7 @@ pipeline {
     }
     
     parameters {
-        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to test')
+        choice(name: 'BRANCH_NAME', choices: ['main', 'dev', 'qa-branch'], description: 'Select branch to run')
         choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'])
         choice(name: 'TEST_TAG', choices: ['@UI', '@SQL', '@JSON', '@EXCEL'])
     }
