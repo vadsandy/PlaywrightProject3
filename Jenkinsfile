@@ -1,23 +1,26 @@
 pipeline {
     agent any
     
+    options {
+        timeout(time: 15, unit: 'MINUTES') // Prevents "hanging" builds
+        ansiColor('xterm') // Makes console logs easier to read
+    }
+
     environment {
-        // Switch back to secure credentials now that we know the server path is right
+        // Credentials matched to your image_73b33a.png
         DB_USER = credentials('DB_USER_ID') 
         DB_PASS = credentials('DB_PASSWORD_SECRET')
         
-        // These are static for your local machine
-        DB_SERVER = 'localhost' // Use 'localhost' or '127.0.0.1'
+        DB_SERVER = 'localhost'
         DB_NAME = 'PlaywrightTestData'
         DB_PORT = '1433'
         BASE_URL = 'https://demoqa.com'
-        
         TARGET_ENV = "${params.ENVIRONMENT}"
     }
     
     parameters {
-        choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'], description: 'Environment')
-        choice(name: 'TEST_TAG', choices: ['@UI', '@EXCEL', '@JSON', '@SQL'], description: 'Test Tag')
+        choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'], description: 'Target Environment')
+        choice(name: 'TEST_TAG', choices: ['@UI', '@SQL', '@JSON', '@EXCEL', '@API'], description: 'Category')
     }
 
     stages {
@@ -27,21 +30,21 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install') {
             steps {
                 bat 'npm install'
                 bat 'npx playwright install --with-deps'
             }
         }
 
-        stage('Execute Tests') {
+        stage('Execute') {
             steps {
                 script {
                     def runTarget = (params.SELECTED_FEATURES && params.SELECTED_FEATURES.trim() != "") ? 
                                     params.SELECTED_FEATURES.split(',').collect { "src/features/${it.trim()}" }.join(' ') : 
                                     "src/features/"
                     
-                    echo "Running tests with credentials on ${env.DB_SERVER}"
+                    // Runs the selected features and tags
                     bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG}"
                 }
             }
@@ -51,6 +54,8 @@ pipeline {
     post {
         always {
             allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
+            // This ensures the Test Results Analyzer has fresh data to pull
+            junit '**/test-results/*.xml' // Only if your framework outputs JUnit XML
         }
     }
 }
