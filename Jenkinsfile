@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         DB_USER = credentials('DB_USER_ID') 
-        DB_PASS = credentials('DB_PASSWORD_SECRET')
+        DB_PASSWORD = credentials('DB_PASSWORD_SECRET')
         DB_SERVER = 'localhost'
         DB_NAME = 'PlaywrightTestData'
         DB_PORT = '1433'
@@ -14,14 +14,16 @@ pipeline {
         choice(name: 'BRANCH_NAME', choices: ['main', 'dev', 'qa-branch'], description: 'Select branch to run')
         choice(name: 'ENVIRONMENT', choices: ['QA', 'Staging', 'Production'])
         choice(name: 'TEST_TAG', choices: ['@UI', '@SQL', '@JSON', '@EXCEL'])
-        string(name: 'SELECTED_FEATURES', defaultValue: '', description: 'Comma separated feature files (e.g. login.feature, login_negative.feature)')
+        string(name: 'SELECTED_FEATURES', defaultValue: '', description: 'Comma separated feature files (e.g. login.feature)')
     }
 
     stages {
-        
         stage('Cleanup') {
-            bat 'if exist allure-results del /q allure-results\\*' 
-            bat 'if not exist reports mkdir reports' // <--- ADD THIS LINE
+            steps {
+                // All bat commands must stay inside this steps block
+                bat 'if exist allure-results del /q allure-results\\*'
+                bat 'if not exist reports mkdir reports'
+            }
         }
         stage('Install') {
             steps {
@@ -36,7 +38,6 @@ pipeline {
                                     params.SELECTED_FEATURES.split(',').collect { "src/features/${it.trim()}" }.join(' ') : 
                                     "src/features/"
                     
-                    // UPDATE THIS LINE BELOW
                     bat "npx cucumber-js ${runTarget} --tags ${params.TEST_TAG} --format junit:reports/junit.xml"
                 }
             }
@@ -46,7 +47,6 @@ pipeline {
     post {
         always {
             allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
-            // This is the "magic" line for the Test Results Analyzer
             junit testResults: 'reports/junit.xml', allowEmptyResults: true
         }
     }
